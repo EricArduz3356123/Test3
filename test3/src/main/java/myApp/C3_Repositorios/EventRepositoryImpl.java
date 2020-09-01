@@ -9,14 +9,10 @@
 ********************************************************************************/
 package myApp.C3_Repositorios;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.validation.constraints.NotNull;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;

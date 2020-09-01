@@ -35,19 +35,14 @@ import org.springframework.web.bind.annotation.RestController;
 import myApp.C2_Servicios.AccountService;
 import myApp.C3_Modelos.Account;
 import myApp.CT_Accesorios.MyMtsReposException;
-import myApp.CT_Comunicacion.EmailService;
 
 // TODO: Auto-generated Javadoc
 /**
  * The Class AccountController.
  */
 @RestController
-@RequestMapping(value = "/api")
+@RequestMapping(value = "")
 public class AccountController {
-
-	/** The email service. */
-	@Autowired
-	EmailService emailService;
 
 	/** The account service. */
 	@Autowired
@@ -138,11 +133,11 @@ public class AccountController {
 		try {
 			balance = accountService.getBalance(account_id);
 		} catch (MyMtsReposException e) {
-			String res = "404 0";
+			String res = "0";
 			return new ResponseEntity<String>(res, HttpStatus.NOT_FOUND );
 		}
 
-		String res = "200 " + balance;
+		String res = String.valueOf(balance);
 		return new ResponseEntity<String>(res, HttpStatus.OK );
 	}
 
@@ -195,7 +190,7 @@ public class AccountController {
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		String res = "200 OK";
+		String res = "OK";
 		return new ResponseEntity<String>(res, HttpStatus.OK );
 	}
 

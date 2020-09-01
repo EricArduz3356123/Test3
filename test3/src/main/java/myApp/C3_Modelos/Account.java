@@ -18,33 +18,33 @@ import javax.persistence.Table;
  * The Class CatTest.
  */
 @Entity
-@Table(name = "accounts", catalog = "test11")
+@Table(name = "accounts", catalog = "testdb")
 public class Account {
 
 	/** The cat test id. */
 	// ************************************************************
 	@Id
 	@Column(name = "account_id", updatable = true, nullable = false)
-	private int accountId;
+	private int id;
 
-	public int getAccountId() {
-		return accountId;
+	public int getId() {
+		return id;
 	}
 
-	public void setAccountId(int accountId) {
-		this.accountId = accountId;
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	/** The nit. */
 	@Column(name = "amount")
-	private int amount;
+	private int balance;
 
-	public int getAmount() {
-		return amount;
+	public int getBalance() {
+		return balance;
 	}
 
-	public void setAmount(int amount) {
-		this.amount = amount;
+	public void setBalance(int balance) {
+		this.balance = balance;
 	}
 
 	/**
@@ -53,15 +53,20 @@ public class Account {
 	public Account() {
 	}
 
-	public Account(int accountId, int amount) {
+	public Account(int id, int balance) {
 		super();
-		this.accountId = accountId;
-		this.amount = amount;
+		this.id = id;
+		this.balance = balance;
 	}
 
-	@Override
-	public String toString() {
-		return "Account [accountId=" + accountId + ", amount=" + amount + "]";
+	public String toDestinationString() {
+		//201 {"destination": {"id":"100", "balance":10}}
+		return "{\"destination\": {\"id\":\"" + id + "\", \"balance\":" + balance + "}}";
+	}
+	
+	public String fromOriginString() {
+		//201 {"origin": {"id":"100", "balance":15}}
+		return "{\"origin\": {\"id\":\"" + id + "\", \"balance\":" + balance + "}}";
 	}
 
 }

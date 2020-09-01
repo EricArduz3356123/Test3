@@ -20,7 +20,7 @@ import javax.persistence.Table;
  * The Class Event.
  */
 @Entity
-@Table(name = "events", catalog = "test11")
+@Table(name = "events", catalog = "testdb")
 public class Event {
 
 	/** The event id. */

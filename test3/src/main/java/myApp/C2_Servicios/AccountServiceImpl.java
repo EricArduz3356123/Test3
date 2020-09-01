@@ -64,7 +64,7 @@ public class AccountServiceImpl implements AccountService {
 	public int getBalance(int id) throws MyMtsReposException {
 		Account account = accountRepository.findById(id).orElseThrow(() -> new MyMtsReposException(
 				"Error en getOne. Identificador inexistente para EventId: " + id, null, ErroresCodes.CTX1_CAT_SERVICE));
-		return (account.getAmount());
+		return (account.getBalance());
 	}
 
 	/**
@@ -133,8 +133,8 @@ public class AccountServiceImpl implements AccountService {
 						"Error en update. Identificador inexistente de AccountId: " + entidadModificadaId, null,
 						ErroresCodes.CTX1_CAT_SERVICE));
 
-		entidadBd.setAccountId(entidadModificada.getAccountId());
-		entidadBd.setAmount(entidadModificada.getAmount());
+		entidadBd.setId(entidadModificada.getId());
+		entidadBd.setBalance(entidadModificada.getBalance());
 
 		try {
 			entidadBd = grabar(entidadBd);

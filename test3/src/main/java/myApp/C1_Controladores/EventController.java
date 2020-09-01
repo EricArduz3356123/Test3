@@ -14,8 +14,6 @@ package myApp.C1_Controladores;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -23,7 +21,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,22 +36,14 @@ import myApp.C2_Servicios.AccountService;
 import myApp.C2_Servicios.EventService;
 import myApp.C3_Modelos.Account;
 import myApp.C3_Modelos.Event;
-import myApp.C3_Modelos.Event;
 import myApp.CT_Accesorios.MyMtsReposException;
-import myApp.CT_Comunicacion.EmailDto;
-import myApp.CT_Comunicacion.EmailService;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class EventController.
  */
 @RestController
-@RequestMapping(value = "/api")
+@RequestMapping(value = "")
 public class EventController {
-
-	/** The email service. */
-	@Autowired
-	EmailService emailService;
 
 	/** The event service. */
 	@Autowired
@@ -64,16 +53,13 @@ public class EventController {
 	@Autowired
 	AccountService accountService;
 
-	/** The logger. */
-	private Logger logger = LogManager.getLogger();
-
 	/**
 	 * Gets the events.
 	 *
-	 * @param $search the $search
+	 * @param $search  the $search
 	 * @param $orderby the $orderby
-	 * @param $skip the $skip
-	 * @param $top the $top
+	 * @param $skip    the $skip
+	 * @param $top     the $top
 	 * @return the events
 	 * @throws MyMtsReposException the my mts repos exception
 	 */
@@ -143,73 +129,89 @@ public class EventController {
 	 *
 	 * @param event the event
 	 * @return the response entity
-	 * @throws MyMtsReposException the my mts repos exception
+	 * @throws MyMtsReposException  the my mts repos exception
 	 * @throws InterruptedException the interrupted exception
 	 */
 	@PostMapping(value = "/event")
 	public ResponseEntity<?> createEvent(@RequestBody Event event) throws MyMtsReposException, InterruptedException {
 
-		Map<String, Object> response = new HashMap<>();
-
+		@SuppressWarnings("unused")
 		Event eventNuevo = new Event();
 
 		Account accountOrigin = null;
 		Account accountDestination = null;
 
-		try {
-			switch (event.getType()) {
-			case "withdraw": {
+		if (event.getType().equals("withdraw")) {
+			try {
 				eventNuevo = eventService.insertWithdraw(event);
 				accountOrigin = accountService.getOne(event.getOrigin());
-				break;
+			} catch (MyMtsReposException e) {
+				// Withdraw from non-existing account
+				String res = "0";
+				return new ResponseEntity<String>(res, HttpStatus.NOT_FOUND);
 			}
-			case "deposit": {
+		}
+		if (event.getType().equals("deposit")) {
+			try {
 				eventNuevo = eventService.insertDeposit(event);
 				accountDestination = accountService.getOne(event.getDestination());
-				break;
+			} catch (Exception e) {
+				// NA
+				String res = "0";
+				return new ResponseEntity<String>(res, HttpStatus.NOT_FOUND);
 			}
-			case "transfer": {
+		}
+		if (event.getType().equals("transfer")) {
+			try {
 				eventNuevo = eventService.insertTransfer(event);
 				accountOrigin = accountService.getOne(event.getOrigin());
 				accountDestination = accountService.getOne(event.getDestination());
-				break;
+			} catch (MyMtsReposException e) {
+				// Transfer from non-existing account
+				String res = "0";
+				return new ResponseEntity<String>(res, HttpStatus.NOT_FOUND);
 			}
-			}
-		} catch (MyMtsReposException e) {
-			response.put("mensaje", "Error al realizar Insert en la base de datos");
-			response.put("error", e.getMessage());
-			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 		// Current balance state in origin and destination.
 		switch (event.getType()) {
 		case "withdraw": {
-			// response.put("mensaje", "Success in withdraw. ");
-			response.put("origin", accountOrigin);
-			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+			// Withdraw from existing account
+			String res = accountOrigin.fromOriginString();
+			return new ResponseEntity<String>(res, HttpStatus.CREATED);
 		}
 		case "deposit": {
-			// response.put("mensaje", "Success in deposit. ");
-			response.put("destination", accountDestination);
-			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+			// Deposit into existing account.
+			String res = accountDestination.toDestinationString();
+			return new ResponseEntity<String>(res, HttpStatus.CREATED);
 		}
 		default: // case "transfer":
 		{
-			// response.put("mensaje", "Success in transfer. ");
-			response.put("origin", accountOrigin);
-			response.put("destination", accountDestination);
-			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+			// Transfer from existing account
+			String res = textTransferFromExistingAccount(accountOrigin, accountDestination);
+			return new ResponseEntity<String>(res, HttpStatus.CREATED);
 		}
 		}
+
+	}
+
+	String textTransferFromExistingAccount(Account accountOrigin, Account accountDestination) {
+		// 201 {"origin": {"id":"100", "balance":0}, "destination": {"id":"300",
+		// "balance":15}}
+		String a = "{\"origin\": {\"id\":\"" + accountOrigin.getId() + "\", \"balance\":" + accountOrigin.getBalance()
+				+ "}, ";
+		String b = "\"destination\": {\"id\":\"" + accountDestination.getId() + "\", \"balance\":"
+				+ accountDestination.getBalance() + "}}";
+		return a + b;
 
 	}
 
 	/**
 	 * Update event.
 	 *
-	 * @param Event the event
+	 * @param Event   the event
 	 * @param EventId the event id
-	 * @param token the token
+	 * @param token   the token
 	 * @return the response entity
 	 * @throws MyMtsReposException the my mts repos exception
 	 */
@@ -250,7 +252,7 @@ public class EventController {
 	 * Delete event.
 	 *
 	 * @param EventId the event id
-	 * @param token the token
+	 * @param token   the token
 	 * @return the response entity
 	 * @throws MyMtsReposException the my mts repos exception
 	 */

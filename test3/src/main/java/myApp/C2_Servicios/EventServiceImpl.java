@@ -24,13 +24,13 @@ import myApp.C3_Repositorios.EventRepository;
 import myApp.CT_Accesorios.ErroresCodes;
 import myApp.CT_Accesorios.MyMtsReposException;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class EventServiceImpl.
  */
 @Service
 public class EventServiceImpl implements EventService {
 
-	/** The event repository. */
 	@Autowired
 	EventRepository eventRepository;
 
@@ -86,12 +86,12 @@ public class EventServiceImpl implements EventService {
 		account = accountRepository.findById(origin)
 				.orElseThrow(() -> new MyMtsReposException("Error on update. Origen Id does not exist for: " + origin,
 						null, ErroresCodes.CTX1_CAT_SERVICE));
-		if (account.getAmount() < entidadBd.getAmount())
+		if (account.getBalance() < entidadBd.getAmount())
 			throw new MyMtsReposException("Invalid. Amount is bigger than balance for Origin Id: " + origin,
 					ErroresCodes.FOLSERVICEIMPL_101);
 
 		// Amount update.
-		account.setAmount(account.getAmount() - entidadBd.getAmount());
+		account.setBalance(account.getBalance() - entidadBd.getAmount());
 
 		// Account saving.
 		try {
@@ -130,7 +130,7 @@ public class EventServiceImpl implements EventService {
 		if (account == null) {
 			account = new Account(entidadBd.getDestination(), entidadBd.getAmount());
 		} else {
-			account.setAmount(account.getAmount() + entidadBd.getAmount());
+			account.setBalance(account.getBalance() + entidadBd.getAmount());
 		}
 
 		// Account saving.
@@ -174,12 +174,12 @@ public class EventServiceImpl implements EventService {
 		accountDestination = accountRepository.findById(destination).orElse(null);
 
 		// Amount validation.
-		if (accountOrigin.getAmount() < entidadBd.getAmount())
+		if (accountOrigin.getBalance() < entidadBd.getAmount())
 			throw new MyMtsReposException("Invalid. Amount is bigger than balance for Origin Id: " + origin,
 					ErroresCodes.FOLSERVICEIMPL_101);
 
 		// Origin saving.
-		accountOrigin.setAmount(accountOrigin.getAmount() - entidadBd.getAmount());
+		accountOrigin.setBalance(accountOrigin.getBalance() - entidadBd.getAmount());
 		try {
 			accountOrigin = grabarAccount(accountOrigin);
 		} catch (MyMtsReposException e) {
@@ -190,7 +190,7 @@ public class EventServiceImpl implements EventService {
 		if (accountDestination == null) {
 			accountDestination = new Account(entidadBd.getDestination(), entidadBd.getAmount());
 		} else {
-			accountDestination.setAmount(accountDestination.getAmount() + entidadBd.getAmount());
+			accountDestination.setBalance(accountDestination.getBalance() + entidadBd.getAmount());
 		}
 		try {
 			accountDestination = grabarAccount(accountDestination);
