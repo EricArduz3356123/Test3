@@ -1,0 +1,14 @@
+Al Sr. Administrador, 
+
+El siguiente pais se ha actualizado en el contexto "fol":
+
+Id: 			[(${catPaisUpdated.catPaisId})]
+Descripción: 	[(${catPaisUpdated.descripcion})]
+
+Sin embargo, no se ha podido replicar en "adm".
+
+Se requiere atención al registro,
+
+Unidad de Mantenimiento
+Arinfotica
+
