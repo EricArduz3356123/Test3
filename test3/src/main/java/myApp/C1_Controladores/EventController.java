@@ -35,47 +35,52 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import myApp.C2_Servicios.AccountService;
 import myApp.C2_Servicios.EventService;
+import myApp.C3_Modelos.Account;
 import myApp.C3_Modelos.Event;
 import myApp.C3_Modelos.Event;
 import myApp.CT_Accesorios.MyMtsReposException;
 import myApp.CT_Comunicacion.EmailDto;
 import myApp.CT_Comunicacion.EmailService;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class EventController.
  */
 @RestController
-@RequestMapping(value = "/apitest1")
+@RequestMapping(value = "/api")
 public class EventController {
 
 	/** The email service. */
 	@Autowired
 	EmailService emailService;
 
-	/** The cat test service. */
+	/** The event service. */
 	@Autowired
-	EventService EventService;
+	EventService eventService;
+
+	/** The account service. */
+	@Autowired
+	AccountService accountService;
 
 	/** The logger. */
 	private Logger logger = LogManager.getLogger();
 
 	/**
-	 * Gets the cat tests.
+	 * Gets the events.
 	 *
-	 * @param $search  the $search
+	 * @param $search the $search
 	 * @param $orderby the $orderby
-	 * @param $skip    the $skip
-	 * @param $top     the $top
-	 * @param token    the token
-	 * @return the cat tests
+	 * @param $skip the $skip
+	 * @param $top the $top
+	 * @return the events
 	 * @throws MyMtsReposException the my mts repos exception
 	 */
 	@GetMapping(value = "/events")
 	public ResponseEntity<?> getEvents(@RequestParam(required = false) String $search,
 			@RequestParam(required = false) String $orderby, @RequestParam final Integer $skip,
-			@RequestParam final Integer $top, @RequestHeader(name = "Authorization") String token)
-			throws MyMtsReposException {
+			@RequestParam final Integer $top) throws MyMtsReposException {
 
 		/**
 		 * Control de nulos en parámetros del request.
@@ -104,29 +109,26 @@ public class EventController {
 
 		Page<Event> pageInfo;
 
-		pageInfo = EventService.getPage(null, search, orderby, pageable);
+		pageInfo = eventService.getPage(null, search, orderby, pageable);
 
 		return new ResponseEntity<>(pageInfo, HttpStatus.OK);
 	}
 
 	/**
-	 * Gets the cat test.
+	 * Gets the event.
 	 *
-	 * @param EventId the cat test id
-	 * @param token    the token
-	 * @return the cat test
+	 * @param EventId the event id
+	 * @return the event
 	 */
-//	@Secured({ "ROLE_AMARILLO_CABM_MTS_OPE_OPERADOR", "ROLE_CAT_01" })
-	@GetMapping(value = "/Event/{id}")
-	public ResponseEntity<?> getEvent(@PathVariable("id") final Integer EventId,
-			@RequestHeader(name = "Authorization") String token) {
+	@GetMapping(value = "/event/{id}")
+	public ResponseEntity<?> getEvent(@PathVariable("id") final Integer EventId) {
 
 		Map<String, Object> response = new HashMap<>();
 
 		Event Event = null;
 
 		try {
-			Event = EventService.getOne(EventId);
+			Event = eventService.getOne(EventId);
 		} catch (MyMtsReposException e) {
 			response.put("mensaje", "Error de base de datos");
 			response.put("error", e.getMessage().concat(": ").concat(e.getMessage()));
@@ -137,74 +139,81 @@ public class EventController {
 	}
 
 	/**
-	 * Creates the cat test.
+	 * Creates the event.
 	 *
-	 * @param Event the cat test
-	 * @param token  the token
+	 * @param event the event
 	 * @return the response entity
-	 * @throws MyMtsReposException  the my mts repos exception
+	 * @throws MyMtsReposException the my mts repos exception
 	 * @throws InterruptedException the interrupted exception
 	 */
-//	@Secured("ROLE_CAT_01")
-	@PostMapping(value = "/Event")
-//	public ResponseEntity<?> createEvent(@RequestBody Event Event,
-//			@RequestHeader(name = "Authorization") String token) throws MyMtsReposException, InterruptedException {
-		public ResponseEntity<?> createEvent(@RequestBody Event Event) throws MyMtsReposException, InterruptedException {
+	@PostMapping(value = "/event")
+	public ResponseEntity<?> createEvent(@RequestBody Event event) throws MyMtsReposException, InterruptedException {
 
-		/** Inicialización de la Variable de respuesta */
 		Map<String, Object> response = new HashMap<>();
 
-		Event EventNuevo = new Event();
+		Event eventNuevo = new Event();
+
+		Account accountOrigin = null;
+		Account accountDestination = null;
 
 		try {
-			EventNuevo = EventService.insert(Event, null);
+			switch (event.getType()) {
+			case "withdraw": {
+				eventNuevo = eventService.insertWithdraw(event);
+				accountOrigin = accountService.getOne(event.getOrigin());
+				break;
+			}
+			case "deposit": {
+				eventNuevo = eventService.insertDeposit(event);
+				accountDestination = accountService.getOne(event.getDestination());
+				break;
+			}
+			case "transfer": {
+				eventNuevo = eventService.insertTransfer(event);
+				accountOrigin = accountService.getOne(event.getOrigin());
+				accountDestination = accountService.getOne(event.getDestination());
+				break;
+			}
+			}
 		} catch (MyMtsReposException e) {
 			response.put("mensaje", "Error al realizar Insert en la base de datos");
 			response.put("error", e.getMessage());
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		/**
-		 * ** PRODUCIR: Produce y publica evento. Si no logra producir por algún motivo,
-		 * entonces envía un email al Administrador. Si por algún motivo no se puede
-		 * enviar un Email, registra un log. En ningún caso detiene el funcionamiento
-		 * del sitio.
-		 */
-//		if (EventNuevo.isReplicaInmediata()) {
-//			/** ---- EMAIL ADMINISTRATIVO: NO ES REPLICA INMEDIATA ------ */
-//			try {
-//				// Preparamos el email.
-//				EmailDto emailDto = new EmailDto("Se requiere réplica manual...", EventNuevo.toString(), "html",
-//						"tReplicaInmediataFalse");
-//				// Enviamos el email.
-//				emailService.sendEmail(emailDto);
-//			} catch (Exception e3) {
-//				logger.info(" ##### 'Se requiere réplica manual...' Email could NOT be sent ####");
-//			}
-//			/** ----------------------------------------------------------- */
-//		}
-		/** ****************************************************************** */
+		// Current balance state in origin and destination.
+		switch (event.getType()) {
+		case "withdraw": {
+			// response.put("mensaje", "Success in withdraw. ");
+			response.put("origin", accountOrigin);
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+		}
+		case "deposit": {
+			// response.put("mensaje", "Success in deposit. ");
+			response.put("destination", accountDestination);
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+		}
+		default: // case "transfer":
+		{
+			// response.put("mensaje", "Success in transfer. ");
+			response.put("origin", accountOrigin);
+			response.put("destination", accountDestination);
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+		}
+		}
 
-		response.put("mensaje", "La test ha sido creado con exito. ");
-		response.put("EventNuevo", EventNuevo);
-		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
 	}
 
 	/**
-	 * Update cat test.
+	 * Update event.
 	 *
-	 * @param Event   the cat test
-	 * @param EventId the cat test id
-	 * @param token    the token
+	 * @param Event the event
+	 * @param EventId the event id
+	 * @param token the token
 	 * @return the response entity
 	 * @throws MyMtsReposException the my mts repos exception
 	 */
-	/**
-	 * Sólo un usuario de la testresa respectiva con el rol especial de ADMINISTRADOR
-	 * puede modificar Event.
-	 */
-	//@Secured("ROLE_CAT_01")
-	@PutMapping(value = "/Event/{id}")
+	@PutMapping(value = "/event/{id}")
 	public ResponseEntity<?> updateEvent(@RequestBody Event Event, @PathVariable("id") final int EventId,
 			@RequestHeader(name = "Authorization") String token) throws MyMtsReposException {
 
@@ -212,7 +221,7 @@ public class EventController {
 
 		try {
 			// Verifica existencia de Id.
-			EventService.getOne(EventId);
+			eventService.getOne(EventId);
 		} catch (MyMtsReposException e) {
 			response.put("mensaje", "Error al consultar EventId en la base de datos " + EventId);
 			response.put("error", e.getMessage());
@@ -223,35 +232,13 @@ public class EventController {
 
 		try {
 			// Actualiza en base de datos.
-			EventActualizado = EventService.update(Event, EventId);
+			EventActualizado = eventService.update(Event, EventId);
 		} catch (MyMtsReposException e) {
 			response.put("mensaje", "Error al realizar la actualización en la base de datos.");
 			response.put("error", e.getMessage());
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		/**
-		 * ** PRODUCIR: Produce y publica evento. Si no logra producir por algún motivo,
-		 * entonces envía un email al Administrador. Si por algún motivo no se puede
-		 * enviar un Email, registra un log. En ningún caso detiene el funcionamiento
-		 * del sitio.
-		 */
-//		if (EventActualizado.isReplicaInmediata()) {
-//			/** ---- EMAIL ADMINISTRATIVO: NO ES REPLICA INMEDIATA ------ */
-//			try {
-//				// Preparamos el email.
-//				EmailDto emailDto = new EmailDto("Se requiere réplica manual...", EventActualizado.toString(), "html",
-//						"tReplicaInmediataFalse");
-//				// Enviamos el email.
-//				emailService.sendEmail(emailDto);
-//			} catch (Exception e3) {
-//				logger.info(" ##### 'Se requiere réplica manual...' Email could NOT be sent ####");
-//			}
-//			/** ----------------------------------------------------------- */
-//		}
-		/** ****************************************************************** */
-
-		// Se ha actualizado la testresa. Devolvemos la testresa actualizada.
 		response.put("mensaje", "¡La testresa ha sido actualizada con éxito!");
 		response.put("Eventresa:", EventActualizado);
 
@@ -260,21 +247,20 @@ public class EventController {
 	}
 
 	/**
-	 * Delete cat test.
+	 * Delete event.
 	 *
-	 * @param EventId the cat test id
-	 * @param token    the token
+	 * @param EventId the event id
+	 * @param token the token
 	 * @return the response entity
-	 * @throws MyMtsReposException
+	 * @throws MyMtsReposException the my mts repos exception
 	 */
-//	@Secured("ROLE_CAT_01")
-	@DeleteMapping(value = "/Event/{id}")
+	@DeleteMapping(value = "/event/{id}")
 	public ResponseEntity<?> deleteEvent(@PathVariable("id") final int EventId,
 			@RequestHeader(name = "Authorization") String token) throws MyMtsReposException {
 		Map<String, Object> response = new HashMap<>();
 
 		try {
-			EventService.delete(EventId);
+			eventService.delete(EventId);
 		} catch (DataAccessException e) {
 			response.put("mensaje", "Error al eliminar el Eventresa en la base de datos");
 			response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));

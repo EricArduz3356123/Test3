@@ -14,8 +14,6 @@ package myApp.C1_Controladores;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -23,7 +21,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,44 +35,38 @@ import org.springframework.web.bind.annotation.RestController;
 import myApp.C2_Servicios.AccountService;
 import myApp.C3_Modelos.Account;
 import myApp.CT_Accesorios.MyMtsReposException;
-import myApp.CT_Comunicacion.EmailDto;
 import myApp.CT_Comunicacion.EmailService;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class AccountController.
  */
 @RestController
-@RequestMapping(value = "/apitest1")
+@RequestMapping(value = "/api")
 public class AccountController {
 
 	/** The email service. */
 	@Autowired
 	EmailService emailService;
 
-	/** The cat test service. */
+	/** The account service. */
 	@Autowired
 	AccountService accountService;
 
-	/** The logger. */
-	private Logger logger = LogManager.getLogger();
-
 	/**
-	 * Gets the cat tests.
+	 * Gets the accounts.
 	 *
-	 * @param $search  the $search
+	 * @param $search the $search
 	 * @param $orderby the $orderby
-	 * @param $skip    the $skip
-	 * @param $top     the $top
-	 * @param token    the token
-	 * @return the cat tests
+	 * @param $skip the $skip
+	 * @param $top the $top
+	 * @return the accounts
 	 * @throws MyMtsReposException the my mts repos exception
 	 */
-	//@Secured({ "ROLE_AMARILLO_CABM_MTS_OPE_OPERADOR", "ROLE_CAT_01" })
 	@GetMapping(value = "/account")
 	public ResponseEntity<?> getAccounts(@RequestParam(required = false) String $search,
 			@RequestParam(required = false) String $orderby, @RequestParam final Integer $skip,
-			@RequestParam final Integer $top, @RequestHeader(name = "Authorization") String token)
-			throws MyMtsReposException {
+			@RequestParam final Integer $top) throws MyMtsReposException {
 
 		/**
 		 * Control de nulos en parámetros del request.
@@ -110,16 +101,13 @@ public class AccountController {
 	}
 
 	/**
-	 * Gets the cat test.
+	 * Gets the account.
 	 *
-	 * @param accountId the cat test id
-	 * @param token    the token
-	 * @return the cat test
+	 * @param accountId the account id
+	 * @return the account
 	 */
-//	@Secured({ "ROLE_AMARILLO_CABM_MTS_OPE_OPERADOR", "ROLE_CAT_01" })
 	@GetMapping(value = "/account_id/{id}")
-	public ResponseEntity<?> getAccount(@PathVariable("id") final Integer accountId,
-			@RequestHeader(name = "Authorization") String token) {
+	public ResponseEntity<?> getAccount(@PathVariable("id") final Integer accountId) {
 
 		Map<String, Object> response = new HashMap<>();
 
@@ -137,21 +125,39 @@ public class AccountController {
 	}
 
 	/**
-	 * Creates the cat test.
+	 * Gets the balance.
 	 *
-	 * @param account the cat test
-	 * @param token  the token
+	 * @param accountId the account id
+	 * @return the balance
+	 */
+	@GetMapping(value = "/balance")
+	public ResponseEntity<?> getBalance(@RequestParam(required = true) final int account_id) {
+
+		int balance;
+
+		try {
+			balance = accountService.getBalance(account_id);
+		} catch (MyMtsReposException e) {
+			String res = "404 0";
+			return new ResponseEntity<String>(res, HttpStatus.NOT_FOUND );
+		}
+
+		String res = "200 " + balance;
+		return new ResponseEntity<String>(res, HttpStatus.OK );
+	}
+
+	/**
+	 * Creates the account.
+	 *
+	 * @param account the account
 	 * @return the response entity
-	 * @throws MyMtsReposException  the my mts repos exception
+	 * @throws MyMtsReposException the my mts repos exception
 	 * @throws InterruptedException the interrupted exception
 	 */
-//	@Secured("ROLE_CAT_01")
-	@PostMapping(value = "/cattest")
-//	public ResponseEntity<?> createAccount(@RequestBody Account account,
-//			@RequestHeader(name = "Authorization") String token) throws MyMtsReposException, InterruptedException {
-		public ResponseEntity<?> createAccount(@RequestBody Account account) throws MyMtsReposException, InterruptedException {
+	@PostMapping(value = "/account")
+	public ResponseEntity<?> createAccount(@RequestBody Account account)
+			throws MyMtsReposException, InterruptedException {
 
-		/** Inicialización de la Variable de respuesta */
 		Map<String, Object> response = new HashMap<>();
 
 		Account accountNuevo = new Account();
@@ -164,54 +170,51 @@ public class AccountController {
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		/**
-		 * ** PRODUCIR: Produce y publica Accounto. Si no logra producir por algún motivo,
-		 * entonces envía un email al Administrador. Si por algún motivo no se puede
-		 * enviar un Email, registra un log. En ningún caso detiene el funcionamiento
-		 * del sitio.
-		 */
-//		if (accountNuevo.isReplicaInmediata()) {
-//			/** ---- EMAIL ADMINISTRATIVO: NO ES REPLICA INMEDIATA ------ */
-//			try {
-//				// Preparamos el email.
-//				EmailDto emailDto = new EmailDto("Se requiere réplica manual...", accountNuevo.toString(), "html",
-//						"tReplicaInmediataFalse");
-//				// Enviamos el email.
-//				emailService.sendEmail(emailDto);
-//			} catch (Exception e3) {
-//				logger.info(" ##### 'Se requiere réplica manual...' Email could NOT be sent ####");
-//			}
-//			/** ----------------------------------------------------------- */
-//		}
-		/** ****************************************************************** */
-
 		response.put("mensaje", "La test ha sido creado con exito. ");
 		response.put("accountNuevo", accountNuevo);
 		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
 	}
 
 	/**
-	 * Update cat test.
+	 * Reset.
 	 *
-	 * @param account   the cat test
-	 * @param accountId the cat test id
-	 * @param token    the token
+	 * @return the response entity
+	 * @throws MyMtsReposException the my mts repos exception
+	 * @throws InterruptedException the interrupted exception
+	 */
+	@PostMapping(value = "/reset")
+	public ResponseEntity<?> reset() throws MyMtsReposException, InterruptedException {
+
+		Map<String, Object> response = new HashMap<>();
+
+		try {
+			accountService.reset();
+		} catch (MyMtsReposException e) {
+			response.put("mensaje", "Error al realizar Insert en la base de datos");
+			response.put("error", e.getMessage());
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		String res = "200 OK";
+		return new ResponseEntity<String>(res, HttpStatus.OK );
+	}
+
+	/**
+	 * Update account.
+	 *
+	 * @param account the account
+	 * @param accountId the account id
+	 * @param token the token
 	 * @return the response entity
 	 * @throws MyMtsReposException the my mts repos exception
 	 */
-	/**
-	 * Sólo un usuario de la testresa respectiva con el rol especial de ADMINISTRADOR
-	 * puede modificar Account.
-	 */
-	//@Secured("ROLE_CAT_01")
-	@PutMapping(value = "/cattest/{id}")
+	@PutMapping(value = "/account/{id}")
 	public ResponseEntity<?> updateAccount(@RequestBody Account account, @PathVariable("id") final int accountId,
 			@RequestHeader(name = "Authorization") String token) throws MyMtsReposException {
 
 		Map<String, Object> response = new HashMap<>();
 
 		try {
-			// Verifica existencia de Id.
 			accountService.getOne(accountId);
 		} catch (MyMtsReposException e) {
 			response.put("mensaje", "Error al consultar accountId en la base de datos " + accountId);
@@ -222,7 +225,6 @@ public class AccountController {
 		Account accountActualizado = new Account();
 
 		try {
-			// Actualiza en base de datos.
 			accountActualizado = accountService.update(account, accountId);
 		} catch (MyMtsReposException e) {
 			response.put("mensaje", "Error al realizar la actualización en la base de datos.");
@@ -230,29 +232,7 @@ public class AccountController {
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		/**
-		 * ** PRODUCIR: Produce y publica Accounto. Si no logra producir por algún motivo,
-		 * entonces envía un email al Administrador. Si por algún motivo no se puede
-		 * enviar un Email, registra un log. En ningún caso detiene el funcionamiento
-		 * del sitio.
-		 */
-//		if (accountActualizado.isReplicaInmediata()) {
-//			/** ---- EMAIL ADMINISTRATIVO: NO ES REPLICA INMEDIATA ------ */
-//			try {
-//				// Preparamos el email.
-//				EmailDto emailDto = new EmailDto("Se requiere réplica manual...", accountActualizado.toString(), "html",
-//						"tReplicaInmediataFalse");
-//				// Enviamos el email.
-//				emailService.sendEmail(emailDto);
-//			} catch (Exception e3) {
-//				logger.info(" ##### 'Se requiere réplica manual...' Email could NOT be sent ####");
-//			}
-//			/** ----------------------------------------------------------- */
-//		}
-		/** ****************************************************************** */
-
-		// Se ha actualizado la testresa. Devolvemos la testresa actualizada.
-		response.put("mensaje", "¡La testresa ha sido actualizada con éxito!");
+		response.put("mensaje", "¡Account updated!");
 		response.put("accountresa:", accountActualizado);
 
 		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
@@ -260,14 +240,13 @@ public class AccountController {
 	}
 
 	/**
-	 * Delete cat test.
+	 * Delete account.
 	 *
-	 * @param accountId the cat test id
-	 * @param token    the token
+	 * @param accountId the account id
+	 * @param token the token
 	 * @return the response entity
-	 * @throws MyMtsReposException
+	 * @throws MyMtsReposException the my mts repos exception
 	 */
-//	@Secured("ROLE_CAT_01")
 	@DeleteMapping(value = "/cattest/{id}")
 	public ResponseEntity<?> deleteAccount(@PathVariable("id") final int accountId,
 			@RequestHeader(name = "Authorization") String token) throws MyMtsReposException {

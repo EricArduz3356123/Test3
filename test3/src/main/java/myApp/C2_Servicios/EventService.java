@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import myApp.C3_Modelos.Event;
 import myApp.CT_Accesorios.MyMtsReposException;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Interface EventService.
  */
@@ -27,10 +28,10 @@ public interface EventService {
 	 *
 	 * @param testId the test id
 	 * @return the one
-	 * @throws MyMtsReposException 
+	 * @throws MyMtsReposException the my mts repos exception
 	 */
 	Event getOne(int testId) throws MyMtsReposException;
-
+	
 	/**
 	 * Gets the page.
 	 *
@@ -43,31 +44,55 @@ public interface EventService {
 	Page<Event> getPage(Integer parentId, String search, String orderby, Pageable pageable);
 
 	/**
-	 * Insert.
+	 * Insert withdraw.
 	 *
-	 * @param Event the cat test
-	 * @param parentId the parent id
-	 * @return the cat test
-	 * @throws MyMtsReposException 
+	 * @param Event the event
+	 * @return the event
+	 * @throws MyMtsReposException the my mts repos exception
 	 */
-	Event insert(Event Event, Integer parentId) throws MyMtsReposException;
+	Event insertWithdraw(Event Event) throws MyMtsReposException;
+
+	/**
+	 * Insert deposit.
+	 *
+	 * @param Event the event
+	 * @return the event
+	 * @throws MyMtsReposException the my mts repos exception
+	 */
+	Event insertDeposit(Event Event) throws MyMtsReposException;
+
+	/**
+	 * Insert transfer.
+	 *
+	 * @param Event the event
+	 * @return the event
+	 * @throws MyMtsReposException the my mts repos exception
+	 */
+	Event insertTransfer(Event Event) throws MyMtsReposException;
 
 	/**
 	 * Update.
 	 *
-	 * @param Event the cat test
-	 * @param EventId the cat test id
-	 * @return the cat test
-	 * @throws MyMtsReposException 
+	 * @param Event the event
+	 * @param EventId the event id
+	 * @return the event
+	 * @throws MyMtsReposException the my mts repos exception
 	 */
 	Event update(Event Event, int EventId) throws MyMtsReposException;
 
 	/**
 	 * Delete.
 	 *
-	 * @param EventId the cat test id
-	 * @throws MyMtsReposException 
+	 * @param EventId the event id
+	 * @throws MyMtsReposException the my mts repos exception
 	 */
 	void delete(int EventId) throws MyMtsReposException;
+
+	/**
+	 * Delete all.
+	 *
+	 * @throws MyMtsReposException the my mts repos exception
+	 */
+	void deleteAll() throws MyMtsReposException;
 
 }
